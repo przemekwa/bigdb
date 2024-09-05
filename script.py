@@ -5,6 +5,7 @@ import sqlite3
 from sqlite3 import Error
 import re
 import matplotlib.pyplot as plt
+import datetime
 
 
 
@@ -53,20 +54,43 @@ def select_all_tasks(conn):
     ax.bar(ages,counts)
     ax.set_title('Fruit supply by kind and color')
     plt.savefig('temp.png')
+
+
+def ensureCreated():
+    x = datetime.datetime.now()
+    conName = 'bigdb_'+ x.strftime("%d_%m_%Y")  +'.db';
+
+    con = create_connection(conName)
+
+    cursor_obj = con.cursor()
+
+    cursor_obj.execute("DROP TABLE IF EXISTS HOUSE")
+
+    table = """ CREATE TABLE HOUSE (
+                LINK           TEXT    NOT NULL,
+                SITE            TEXT     NOT NULL,
+                NICK        TEXT     NOT NULL,
+                AGE         INT     NOT NULL,
+                PRICE         INT     NOT NULL,
+                WEIGHT         INT     NOT NULL,
+                HEIGHT         INT     NOT NULL
+                )
+        """
+
+    cursor_obj.execute(table)
+ 
+    print("Table is Ready")
+
+ 
+
+    return con
         
-def scrapSite(number):
+def scrapSite(number, con):
     global count
     s = requests.session()
+    requestBody = s.get(f'https://pl.escort.club/anonse/panie/poznan/page{number}.html?province=30&district=&filter_price_type=&filter_price=0%3B25000&filter_age=18%3B100&filter_weight=30%3B200&filter_height=100%3B220&filter_breasts=0%3B8&breasts_type=&hair_colors=&sexual_orientation=&searchlang=&zodiac_sign=&q=')
 
-
-
-
-
-    con = s.get(f'https://pl.escort.club/anonse/panie/poznan/page{number}.html?province=30&district=&filter_price_type=&filter_price=0%3B25000&filter_age=18%3B100&filter_weight=30%3B200&filter_height=100%3B220&filter_breasts=0%3B8&breasts_type=&hair_colors=&sexual_orientation=&searchlang=&zodiac_sign=&q=')
-
-    soup = BeautifulSoup(con.text)
-    con = create_connection('bigdb1.db')
-
+    soup = BeautifulSoup(requestBody.text)
     links = soup.find_all("div", "item-col col")
 
     for tag in links:
@@ -88,8 +112,10 @@ def scrapSite(number):
         insert(con,link, site,nick[0].text, age, price,weight, height)
 
 count = count+1
+con = ensureCreated()
 for x in range(8):
-    scrapSite(x+1)
+    scrapSite(x+1, con)
+con.close()
 
 #con = create_connection('bigdb1.db')
 # date = select_all_tasks(con)
