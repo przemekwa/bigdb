@@ -6,8 +6,8 @@ from sqlite3 import Error
 import re
 import matplotlib.pyplot as plt
 import datetime
-
-
+import webbrowser  
+import time
 
 count = 1
 
@@ -111,14 +111,28 @@ def scrapSite(number, con):
         count = count+1
         insert(con,link, site,nick[0].text, age, price,weight, height)
 
+def openUrls(price):
+    x = datetime.datetime.now()
+    conName = 'bigdb_'+ x.strftime("%d_%m_%Y")  +'.db';
+    con = create_connection(conName)
+    cur = con.cursor()
+    cur.execute(f"select max(NICK), max(link), price, weight, height,age from house where site='Poznań' and price >={price} group by price, weight, height,age order by price desc")
+
+    rows = cur.fetchall()
+    for row in rows:
+        print(f"{row[0]} {row[2]}")
+        webbrowser.open(row[1])
+        time.sleep(1)  
+    
+    
+print("===> Processing...")
+
 count = count+1
 con = ensureCreated()
 for x in range(8):
-    scrapSite(x+1, con)
-con.close()
+  scrapSite(x+1, con)
+   
+openUrls(500)
 
-#con = create_connection('bigdb1.db')
-# date = select_all_tasks(con)
-
-print("Date execute!")
+print("===> ...stop.")
 
